@@ -19,7 +19,7 @@ function selected() { return pipelines.filter(function(p) { return p.id === sett
 function ready() { return !!(validated && settings.url && settings.token && selected()); }
 function notify() {
   var p = selected();
-  send({Type: T.CONFIG, RequestId: configRevision, Ready: ready() ? 1 : 0, Assistant: p ? p.name.slice(0, 30) : '', Text: ready() ? 'Ready' : status.slice(0, 350)});
+  send({Type: T.CONFIG, RequestId: configRevision, Ready: ready() ? 1 : 0, Assistant: p ? p.name.slice(0, 30) : '', Text: ready() ? 'Ready' : !settings.url || !settings.token ? 'Open HomeAssist settings on your phone to connect your voice assistant.' : status.slice(0, 350)});
 }
 function persist() {
   localStorage.setItem('homeassist-settings', JSON.stringify(settings));

@@ -7,3 +7,4 @@
 - Added follow-up conversation context until app exit and visible recovery instructions for connection and assistant failures.
 - Fixed assistant discovery getting stuck on “Connecting” in browser-based phone companions and repaired reply-transfer timers.
 - Improved onboarding with in-page connection checks and assistant selection, without closing and reopening settings.
+- Refreshed the watch UI with Pebble’s dictation-gray background, black text, native clock bar, and button-side microphone and scrolling cues.
