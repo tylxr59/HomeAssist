@@ -2,13 +2,14 @@
 var Clay = require('@rebble/clay');
 var keys = require('message_keys');
 var config = require('./config');
+var customConfig = require('./custom-config');
 var ha = require('./ha');
 var protocol = require('./protocol');
 var T = protocol.TYPE;
 function read(name, fallback) { try { return JSON.parse(localStorage.getItem(name)) || fallback; } catch (_) { return fallback; } }
 var settings = read('homeassist-settings', {});
 var pipelines = read('homeassist-pipelines', []);
-var status = read('homeassist-status', 'Enter URL and token, save, then reopen settings.');
+var status = read('homeassist-status', 'Open phone settings, connect to Home Assistant, and select an assistant.');
 var validated = read('homeassist-validated', false);
 var client = new ha.Client(WebSocket);
 var conversationId = null, cancelOperation = null, busy = false, discovering = false, generation = 0, configRevision = 1, clay;
@@ -33,7 +34,7 @@ function reset() {
 }
 function discover() {
   validated = false;
-  status = 'Connecting… Wait a moment, then reopen settings.';
+  status = 'Checking your selected assistant…';
   persist(); notify();
   var gen = generation;
   busy = true; discovering = true;
@@ -45,7 +46,7 @@ function discover() {
       pipelines = list.filter(function(p) { return p && typeof p.id === 'string' && typeof p.name === 'string'; });
       validated = true;
       if (!selected()) settings.pipeline = '';
-      status = !pipelines.length ? 'No assistants found. Configure a voice assistant in Home Assistant.' : selected() ? 'Connected. Assistant: ' + selected().name : 'Connected. Reopen settings and select an assistant, then save.';
+      status = !pipelines.length ? 'No assistants found. Configure a voice assistant in Home Assistant.' : selected() ? 'Connected. Assistant: ' + selected().name : 'Open settings, connect, select an assistant, and save.';
     }
     persist(); notify();
   }
@@ -61,7 +62,8 @@ Pebble.addEventListener('ready', function() {
   else notify();
 });
 Pebble.addEventListener('showConfiguration', function() {
-  clay = new Clay(config(settings, pipelines, status), null, {autoHandleEvents: false});
+  clay = new Clay(config(settings, pipelines), customConfig, {autoHandleEvents: false});
+  clay.meta.userData = {createApi: ha.createApi};
   clay.setSettings({Url: settings.url || '', Token: settings.token || '', Pipeline: settings.pipeline || ''});
   Pebble.openURL(clay.generateUrl());
 });
@@ -72,9 +74,9 @@ Pebble.addEventListener('webviewclosed', function(e) {
   function field(name) { var v = protocol.value(dict, keys, name); return String(v && typeof v === 'object' ? v.value || '' : v || '').trim(); }
   var next = {url: field('Url'), token: field('Token'), pipeline: field('Pipeline')};
   reset(); configRevision++;
-  if (next.url !== settings.url || next.token !== settings.token) { next.pipeline = ''; pipelines = []; }
+  if (next.url !== settings.url || next.token !== settings.token) { pipelines = []; }
   settings = next;
-  if (!settings.url || !settings.token) { validated = false; status = 'Open HomeAssist settings on your phone. Enter URL and token, save, then reopen to select an assistant.'; persist(); notify(); return; }
+  if (!settings.url || !settings.token) { validated = false; status = 'Open HomeAssist settings on your phone. Enter URL and token, connect, select an assistant, and save.'; persist(); notify(); return; }
   try { ha.endpoint(settings.url); } catch (err) { validated = false; status = err.message; persist(); notify(); return; }
   discover();
 });

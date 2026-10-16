@@ -2,7 +2,7 @@
 
 ## Architecture and protocol
 
-Native C handles UI and Pebble's DictationSession. Phone-side PebbleKitJS owns credentials and HA WebSockets. Clay generates a bundled data-URL settings page; networking occurs after it closes, in PKJS.
+Native C handles UI and Pebble's DictationSession. Phone-side PebbleKitJS owns credentials and HA WebSockets. Clay generates a bundled data-URL settings page. Its Connect button uses a serialized factory from the shared HA client to authenticate and populate the assistant picker while the page stays open. PKJS validates the selected pipeline again after Save. No connection or settings changes are persisted until the page is saved.
 
 AppMessage keys are explicit in `package.json`. Numeric and named keys are accepted by PKJS. Type values:
 
@@ -31,7 +31,7 @@ npm run --silent release:notes
 
 The automated suite covers authentication ordering and failures, pipeline discovery and explicit selection, context reset and continuation, stale results, concurrent requests, timeout/disconnection without command replay, Unicode reply chunking, and acknowledgement retries.
 
-Timer regressions also run with browser-sensitive timer functions. When Chromium is available, the suite runs the actual HA client and reply transfer with native browser timers, including authentication, discovery completion, and timeout handling. Set `CHROMIUM_BIN` to a Chromium executable if it is not found automatically; only the native browser test is skipped when Chromium is unavailable. Tests use synthetic credentials and do not connect to a real HA instance.
+Timer regressions also run with browser-sensitive timer functions. When Chromium is available, the suite runs the actual HA client and reply transfer with native browser timers, including authentication, discovery completion, and timeout handling. Real Clay page tests also cover in-place discovery, explicit selection, credential edits, empty lists, stale callbacks, retry, blocked premature submission, and reopening with a saved assistant. Set `CHROMIUM_BIN` to a Chromium executable if it is not found automatically; only the native browser test is skipped when Chromium is unavailable. Tests use synthetic credentials and do not connect to a real HA instance.
 
 For headless emulator inspection:
 
@@ -46,7 +46,7 @@ Keep VNC enabled in both commands on a headless system.
 
 These checks require a real compatible phone companion, working dictation service, and HA instance. Mock tests and emulator screenshots do not prove these work on hardware.
 
-- Complete URL/token save, reopen settings, select a named pipeline, and save.
+- Enter URL/token, tap Connect, select a named pipeline on the same page, and save. Confirm that cancelling discards edits and reopening restores the selected assistant.
 - Launch into dictation automatically, speak a harmless query, and verify HA's reply.
 - Speak a device command and confirm it reaches the selected pipeline exactly once.
 - Press SELECT for a contextual follow-up; exit/reopen and confirm context resets.

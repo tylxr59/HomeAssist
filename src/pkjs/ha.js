@@ -1,4 +1,6 @@
 'use strict';
+// Self-contained factory also serialized into the bundled Clay settings page.
+function createApi(defaultTimers) {
 function endpoint(base) {
   base = String(base || '').trim().replace(/\/+$/, '');
   if (!/^https?:\/\/[^/?#\s@]+(?::\d+)?(?:\/[^?#\s]*)?$/.test(base)) {
@@ -22,7 +24,7 @@ function readable(output) {
 // Each operation owns one socket. Never reconnect or replay an uncertain command.
 function Client(Socket, timers) {
   this.Socket = Socket;
-  this.timers = timers || require('./timers');
+  this.timers = timers || defaultTimers;
 }
 Client.prototype.perform = function(settings, command, callback) {
   var ws, timer, finished = false, authenticated = false, id = 1, self = this, output;
@@ -78,4 +80,8 @@ Client.prototype.perform = function(settings, command, callback) {
   ws.onclose = function() { finish(new Error(command ? 'Connection lost. The command may have run; check Home Assistant.' : 'Home Assistant disconnected. Check URL and token.')); };
   return function() { finish(new Error('Configuration changed. Start a new command.')); };
 };
-module.exports = {Client: Client, endpoint: endpoint, readable: readable};
+return {Client: Client, endpoint: endpoint, readable: readable};
+}
+var api = createApi(require('./timers'));
+api.createApi = createApi;
+module.exports = api;

@@ -43,7 +43,7 @@ static void dictation_result(DictationSession *session, DictationSessionStatus s
 static void start_automatic(void *context) { s_timer = NULL; dictate(); }
 static void dictate(void) {
   if (s_busy || s_listening) return;
-  if (!s_ready) { show("Open HomeAssist settings in the phone companion. Save your URL and token, then reopen settings to choose an assistant."); return; }
+  if (!s_ready) { show("Open HomeAssist settings in the phone companion. Enter URL and token, connect, choose an assistant, and save."); return; }
   if (!s_dictation) s_dictation = dictation_session_create(0, dictation_result, NULL);
   if (!s_dictation) { show("Dictation unavailable. Check the phone connection and speech service."); return; }
   dictation_session_enable_confirmation(s_dictation, false);

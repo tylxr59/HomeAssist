@@ -32,11 +32,11 @@ Pebble's speech service performs transcription. The app sends the resulting text
 
 1. In your Home Assistant profile, create a **Long-Lived Access Token**. Treat it like a password.
 2. Open HomeAssist's settings in the Pebble phone companion.
-3. Enter your HA base URL (for example `https://home.example.com` or `http://192.168.1.20:8123`) and token, then select **Save and refresh assistants**.
-4. Wait a moment while the phone authenticates. Reopen settings to see the connection status and available voice assistants.
-5. Select an assistant and save. Wait for validation, then launch HomeAssist on the watch and speak.
+3. Enter your HA base URL (for example `https://home.example.com` or `http://192.168.1.20:8123`) and token, then tap **Connect**.
+4. Wait for the connection result on the same page. Choose your voice assistant from the populated picker, then tap **Save**.
+5. Launch HomeAssist on the watch and speak.
 
-This is deliberately a two-step setup. Reopening settings while discovery is pending may still show “Connecting”; wait and reopen again. Saving always refreshes the list. Changing the URL or token clears the previous selection, so repeat the assistant-selection step. Cancelling settings does not apply changes.
+Connect keeps settings open and displays errors inline. Save closes the page and applies the selected assistant; the phone companion then validates the saved connection. Reopening existing settings automatically reconnects and preserves your assistant if it is still available. Changing URL or token requires reconnecting and selecting an assistant before saving. Cancelling the page leaves your saved configuration unchanged.
 
 Use the base URL, without `/api/websocket`, query parameters, URL credentials, or a fragment. Path prefixes such as `https://example.com/homeassistant` are preserved. HTTP is supported for trusted local networks; HTTPS encrypts the connection. A local URL works only when the phone can reach that network (directly or through a VPN). Self-signed or untrusted certificates may be rejected by the companion.
 
@@ -53,10 +53,10 @@ Exiting and reopening starts a fresh conversation. Saving settings also resets c
 
 ## Troubleshooting
 
-- **Setup instructions:** save URL/token first, then reopen settings and select an assistant.
-- **Authentication failed:** replace an invalid or revoked token and save, then reselect an assistant.
+- **Setup instructions:** enter URL/token, tap Connect, select an assistant, and save.
+- **Authentication failed:** replace an invalid or revoked token, tap Connect, select an assistant, and save.
 - **No assistants / permissions:** configure a voice assistant in HA and check that the token's user can list and run pipelines.
-- **Assistant removed:** reopen settings, save to refresh the list, then reopen and select a valid assistant.
+- **Assistant removed:** open settings, let it reconnect or tap Refresh assistants, then select an available assistant and save.
 - **Dictation unavailable / failed:** check Bluetooth, companion dictation support, speech-service availability, and your phone's connection. The emulator cannot verify real speech recognition.
 - **Connection failed:** test the base URL from your phone; check VPN, reverse-proxy WebSocket support, and certificates.
 - **Timeout / lost connection / reply delivery failed:** a command may already have executed. Check HA before speaking it again. HomeAssist never automatically repeats an uncertain command.
