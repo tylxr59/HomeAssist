@@ -1,0 +1,12 @@
+{
+  "name": "homeassist", "version": "1.0.0", "private": true, "author": "tylxr59", "license": "MIT",
+  "description": "Quick access to Home Assistant Assist from Pebble Time 2",
+  "scripts": {"build": "pebble build", "test": "node --test test/*.test.js", "install:emery": "pebble install --emulator emery --vnc", "release:notes": "node tools/extract-release-notes.js"},
+  "dependencies": {"@rebble/clay": "1.0.8"},
+  "pebble": {
+    "displayName": "HomeAssist", "uuid": "5a93cd2a-7694-4514-95d0-54c75801ae6d", "sdkVersion": "3", "enableMultiJS": true,
+    "capabilities": ["configurable"], "targetPlatforms": ["emery"], "watchapp": {"watchface": false},
+    "messageKeys": ["Type", "RequestId", "Text", "Ready", "Assistant", "ChunkIndex", "ChunkLast", "Url", "Token", "Pipeline"],
+    "resources": {"media": []}
+  }
+}

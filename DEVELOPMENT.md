@@ -1,0 +1,59 @@
+# Development
+
+## Architecture and protocol
+
+Native C handles UI and Pebble's DictationSession. Phone-side PebbleKitJS owns credentials and HA WebSockets. Clay generates a bundled data-URL settings page; networking occurs after it closes, in PKJS.
+
+AppMessage keys are explicit in `package.json`. Numeric and named keys are accepted by PKJS. Type values:
+
+| Type | Value | Fields |
+| --- | --- | --- |
+| HELLO | 0 | Resets phone conversation state on watch launch |
+| CONFIG | 1 | RequestId (configuration revision), Ready, Assistant, Text |
+| COMMAND | 2 | RequestId, Text |
+| CHUNK | 3 | RequestId, ChunkIndex, ChunkLast, Text |
+| ERROR | 4 | RequestId, Text |
+| ACK | 5 | RequestId, ChunkIndex |
+
+Command IDs advance on errors and settings changes so late responses cannot replace current UI. Duplicate readiness notifications for the same ready configuration do not restart or cancel dictation. Replies use ordered chunks of up to 400 UTF-8 bytes, without splitting characters. The watch acknowledges each chunk, including duplicates, and assembles at most 8,192 bytes. PKJS retries the same chunk at most three total attempts, waiting 2.5 seconds between attempts. Commands themselves are never replayed.
+
+The client authenticates on `/api/websocket`, lists `assist_pipeline/pipeline/list`, and submits `assist_pipeline/run` with intent as both start and end stage. The command's successful `result` message acknowledges subscription only. `intent-end` supplies the response; `run-end` completes it. The returned conversation ID is reused only during the current app session.
+
+Connection/discovery timeouts are 10 seconds; command completion has a 60-second timeout after authentication. The watch waits up to 80 seconds for the command and reply delivery, or 15 seconds for the companion on startup. Failed responses are never retried as commands.
+
+## Validation
+
+```bash
+npm test
+npm run build
+npm run --silent release:notes
+```
+
+The automated suite covers authentication ordering and failures, pipeline discovery and explicit selection, context reset and continuation, stale results, concurrent requests, timeout/disconnection without command replay, Unicode reply chunking, and acknowledgement retries.
+
+Timer regressions also run with browser-sensitive timer functions. When Chromium is available, the suite runs the actual HA client and reply transfer with native browser timers, including authentication, discovery completion, and timeout handling. Set `CHROMIUM_BIN` to a Chromium executable if it is not found automatically; only the native browser test is skipped when Chromium is unavailable. Tests use synthetic credentials and do not connect to a real HA instance.
+
+For headless emulator inspection:
+
+```bash
+pebble install --emulator emery --vnc
+pebble screenshot --emulator emery --vnc --no-open build/screen.png
+```
+
+Keep VNC enabled in both commands on a headless system.
+
+## Physical Time 2 acceptance checklist
+
+These checks require a real compatible phone companion, working dictation service, and HA instance. Mock tests and emulator screenshots do not prove these work on hardware.
+
+- Complete URL/token save, reopen settings, select a named pipeline, and save.
+- Launch into dictation automatically, speak a harmless query, and verify HA's reply.
+- Speak a device command and confirm it reaches the selected pipeline exactly once.
+- Press SELECT for a contextual follow-up; exit/reopen and confirm context resets.
+- Cancel dictation and verify no HA request is submitted.
+- Scroll a long reply to the bottom; verify text stays above the footer.
+- Revoke a token, remove the selected pipeline, disconnect Bluetooth, and interrupt network access; verify visible recovery instructions and no automatic command replay.
+- Save settings while processing and verify stale replies do not appear.
+- Verify both HTTP LAN and HTTPS/reverse-proxy URLs as relevant to the user's network.
+
+Do not record tokens in logs, screenshots, fixtures, issue reports, or release notes.
