@@ -1,5 +1,5 @@
 'use strict';
-const fs = require('node:fs');
+const {execFileSync} = require('node:child_process');
 const path = require('node:path');
 const vm = require('node:vm');
 // Use Clay's distributed bundle, including its real templates and serialization.
@@ -9,7 +9,7 @@ module.exports = function(settings = {}, pipelines = []) {
   const Pebble = {platform: 'android', addEventListener() {}};
   const localStorage = {getItem(k) {return store[k] || null;}, setItem(k, v) {store[k] = v;}};
   const module = {exports: {}};
-  vm.runInNewContext(fs.readFileSync(path.join(root, 'dist/js/index.js'), 'utf8'), {
+  vm.runInNewContext(execFileSync('unzip', ['-p', path.join(root, 'dist.zip'), 'js/index.js'], {encoding: 'utf8'}), {
     module, exports: module.exports, Pebble, localStorage, console,
     require(name) {
       if (name === 'message_keys') return {};

@@ -1,9 +1,5 @@
 # Changelog
 
-## Unreleased
-
-- Simplified the watch layout with wider replies, vertically centered short responses, and a compact voice area below the conversation, preserving Pebble's gray palette and Gothic fonts.
-
 ## 1.0.0
 
 - Added launch-to-dictation access to Home Assistant Assist on Pebble Time 2, with immediate command submission and scrollable text replies.
@@ -11,4 +7,4 @@
 - Added follow-up conversation context until app exit and visible recovery instructions for connection and assistant failures.
 - Fixed assistant discovery getting stuck on “Connecting” in browser-based phone companions and repaired reply-transfer timers.
 - Improved onboarding with in-page connection checks and assistant selection, without closing and reopening settings.
-- Refreshed the watch UI with Pebble’s dictation-gray background, black text, native clock bar, and button-side microphone and scrolling cues.
+- Refreshed the watch UI with wider replies, vertically centered short responses, and a compact voice area, preserving Pebble’s gray palette, Gothic fonts, and native clock bar.

@@ -1,54 +1,91 @@
 name: Release PBW
+
 on:
   push:
-    tags: ['v*']
+    tags: ["v*"]
   workflow_dispatch:
     inputs:
       release_tag:
         description: Existing v* tag to rebuild and publish
         required: true
         type: string
+
 permissions:
   contents: write
+
 concurrency:
   group: release-${{ inputs.release_tag || github.ref_name }}
   cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: homeassist
     env:
       RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+
     steps:
-      - uses: actions/checkout@v6
+      - name: Check out tagged source
+        uses: actions/checkout@v6
         with:
           ref: ${{ env.RELEASE_TAG }}
-      - uses: actions/setup-node@v6
+          fetch-depth: 0
+          path: homeassist
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          cache: npm
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: homeassist/package-lock.json
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Install Pebble SDK
+        run: |
+          uv tool install pebble-tool
+          pebble sdk install latest
+          pebble --version
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Verify release tag
         run: |
           case "$RELEASE_TAG" in v*) ;; *) exit 1 ;; esac
           git ls-remote --exit-code --tags origin "refs/tags/$RELEASE_TAG"
           PACKAGE_VERSION="$(node -p "require('./package.json').version")"
           test "$RELEASE_TAG" = "v$PACKAGE_VERSION"
-      - name: Install uv and Pebble SDK
+
+      - name: Validate JavaScript
         run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          export PATH="$HOME/.local/bin:$PATH"
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          uv tool install pebble-tool
-          pebble sdk install latest
-      - run: npm ci
-      - run: npm test
-      - run: npm run build
+          for source in src/pkjs/*.js tools/*.js; do node -c "$source"; done
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build PBW
+        run: |
+          npm run build --if-present
+          if ! compgen -G "build/*.pbw" >/dev/null; then pebble build; fi
+
       - name: Prepare release notes
-        run: npm run --silent release:notes -- "${RELEASE_TAG#v}" > release-notes.md
-      - uses: actions/upload-artifact@v6
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          npm run --silent release:notes -- "$VERSION" > release-notes.md
+
+      - name: Upload PBW artifact
+        uses: actions/upload-artifact@v6
         with:
           name: homeassist-pbw
-          path: build/*.pbw
+          path: homeassist/build/*.pbw
           if-no-files-found: error
+
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -57,16 +94,23 @@ jobs:
             local attempt=1
             local delay=5
             while ! "$@"; do
-              if (( attempt >= 6 )); then return 1; fi
+              if (( attempt >= 6 )); then
+                echo "Command failed after $attempt attempts: $*" >&2
+                return 1
+              fi
+              echo "GitHub API request failed; retrying in ${delay}s (attempt $((attempt + 1))/6)" >&2
               sleep "$delay"
               attempt=$((attempt + 1))
               delay=$((delay * 2))
               if (( delay > 30 )); then delay=30; fi
             done
           }
+
           ensure_release() {
             local output
-            if output="$(gh release view "$RELEASE_TAG" 2>&1)"; then return 0; fi
+            if output="$(gh release view "$RELEASE_TAG" 2>&1)"; then
+              return 0
+            fi
             if [[ "$output" == *"release not found"* ]]; then
               gh release create "$RELEASE_TAG" --title "$RELEASE_TAG" --notes-file release-notes.md
               return
@@ -74,6 +118,7 @@ jobs:
             echo "$output" >&2
             return 1
           }
+
           retry ensure_release
           retry gh release edit "$RELEASE_TAG" --title "$RELEASE_TAG" --notes-file release-notes.md
           retry gh release upload "$RELEASE_TAG" build/*.pbw --clobber

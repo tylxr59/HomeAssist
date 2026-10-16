@@ -6,7 +6,7 @@ Launching the configured app immediately opens Pebble dictation. The recognized 
 
 ## Install
 
-Build locally using the instructions below. Tagged builds will be available from [GitHub Releases](https://github.com/tylxr59/HomeAssist/releases) when published. This app is not yet listed in the Pebble Appstore.
+Download the latest PBW from [GitHub Releases](https://github.com/tylxr59/HomeAssist/releases), or build locally using the instructions below. This app is not yet listed in the Pebble Appstore.
 
 ## Features
 
