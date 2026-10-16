@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Simplified the watch layout with wider replies, vertically centered short responses, and a compact voice area below the conversation, preserving Pebble's gray palette and Gothic fonts.
+
 ## 1.0.0
 
 - Added launch-to-dictation access to Home Assistant Assist on Pebble Time 2, with immediate command submission and scrollable text replies.

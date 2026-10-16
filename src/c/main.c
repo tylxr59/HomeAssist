@@ -2,9 +2,11 @@
 
 #define MAX_TRANSCRIPT 1024
 #define MAX_REPLY 8192
-#define CONTENT_WIDTH 176
-#define TEXT_WIDTH 156
-#define VIEW_HEIGHT 142
+#define SCREEN_WIDTH 200
+#define TEXT_INSET 16
+#define TEXT_WIDTH 168
+#define VIEW_TOP 28
+#define VIEW_HEIGHT 140
 enum { HELLO, CONFIG, COMMAND, CHUNK, ERROR, ACK };
 static Window *s_window;
 static TextLayer *s_title, *s_text, *s_footer;
@@ -20,46 +22,60 @@ static uint16_t s_next_chunk;
 static bool s_ready, s_busy, s_listening, s_auto_started, s_received_config, s_complete;
 
 static void draw_controls(Layer *layer, GContext *ctx) {
+  const int voice_y = 201 - VIEW_TOP;
   graphics_context_set_stroke_color(ctx, GColorBlack);
   graphics_context_set_fill_color(ctx, GColorBlack);
   graphics_context_set_stroke_width(ctx, 2);
-  // Small button-side cues leave the reply itself free of chrome.
+  // Only show button-side scroll cues when there is more to read.
   GPoint offset = scroll_layer_get_content_offset(s_scroll);
   GSize size = scroll_layer_get_content_size(s_scroll);
   if (offset.y < 0) {
-    graphics_draw_line(ctx, GPoint(7, 28), GPoint(12, 23));
-    graphics_draw_line(ctx, GPoint(12, 23), GPoint(17, 28));
+    graphics_draw_line(ctx, GPoint(190, 11), GPoint(193, 8));
+    graphics_draw_line(ctx, GPoint(193, 8), GPoint(196, 11));
   }
   if (size.h + offset.y > VIEW_HEIGHT) {
-    graphics_draw_line(ctx, GPoint(7, 169), GPoint(12, 174));
-    graphics_draw_line(ctx, GPoint(12, 174), GPoint(17, 169));
+    graphics_draw_line(ctx, GPoint(190, VIEW_HEIGHT - 11), GPoint(193, VIEW_HEIGHT - 8));
+    graphics_draw_line(ctx, GPoint(193, VIEW_HEIGHT - 8), GPoint(196, VIEW_HEIGHT - 11));
   }
-  if (!s_ready) return;
-  if (s_busy) {
-    for (int x = 6; x <= 18; x += 6) graphics_fill_circle(ctx, GPoint(x, 96), 1);
+  // A single voice anchor groups the assistant and action below the reply.
+  // Static shapes avoid a repeating animation timer on the watch.
+  if (s_busy || !s_received_config) {
+    for (int x = 23; x <= 43; x += 10) graphics_fill_circle(ctx, GPoint(x, voice_y), 2);
     return;
   }
-  graphics_fill_rect(ctx, GRect(8, 84, 8, 16), 4, GCornersAll);
-  const GPoint cradle[] = {{5, 95}, {5, 100}, {8, 104}, {12, 106}, {16, 104}, {19, 100}, {19, 95}};
-  for (unsigned int i = 1; i < ARRAY_LENGTH(cradle); i++) graphics_draw_line(ctx, cradle[i - 1], cradle[i]);
-  graphics_draw_line(ctx, GPoint(12, 106), GPoint(12, 111));
-  graphics_draw_line(ctx, GPoint(8, 111), GPoint(16, 111));
+  if (!s_ready) {
+    graphics_draw_round_rect(ctx, GRect(24, voice_y - 14, 18, 28), 3);
+    graphics_draw_line(ctx, GPoint(29, voice_y - 10), GPoint(37, voice_y - 10));
+    graphics_fill_circle(ctx, GPoint(33, voice_y + 10), 1);
+    return;
+  }
+  const int heights[] = {6, 16, 26, 12, 20, 8};
+  for (unsigned int i = 0; i < ARRAY_LENGTH(heights); i++) {
+    graphics_fill_rect(ctx, GRect(18 + i * 6, voice_y - heights[i] / 2, 4, heights[i]), 2, GCornersAll);
+  }
 }
-static void scrolled(ScrollLayer *scroll, void *context) { layer_mark_dirty(s_controls); }
+static void redraw(void) {
+  layer_mark_dirty(s_controls);
+  layer_mark_dirty(status_bar_layer_get_layer(s_status));
+}
+static void scrolled(ScrollLayer *scroll, void *context) { redraw(); }
 static void show(const char *text) {
   if (text != s_reply) snprintf(s_reply, sizeof(s_reply), "%s", text);
   text_layer_set_text(s_text, s_reply);
-  text_layer_set_size(s_text, GSize(TEXT_WIDTH, 30000));
+  layer_set_frame(text_layer_get_layer(s_text), GRect(TEXT_INSET, 0, TEXT_WIDTH, 30000));
   GSize size = text_layer_get_content_size(s_text);
-  int height = size.h > VIEW_HEIGHT ? size.h + 10 : VIEW_HEIGHT;
-  text_layer_set_size(s_text, GSize(TEXT_WIDTH, height));
-  scroll_layer_set_content_size(s_scroll, GSize(CONTENT_WIDTH, height));
+  // Short responses breathe in the center; long responses start at the top.
+  int top = size.h < VIEW_HEIGHT ? (VIEW_HEIGHT - size.h) / 2 : 0;
+  int height = size.h + 8;
+  layer_set_frame(text_layer_get_layer(s_text), GRect(TEXT_INSET, top, TEXT_WIDTH, height));
+  int content_height = top + height > VIEW_HEIGHT ? top + height : VIEW_HEIGHT;
+  scroll_layer_set_content_size(s_scroll, GSize(SCREEN_WIDTH, content_height));
   scroll_layer_set_content_offset(s_scroll, GPointZero, false);
-  layer_mark_dirty(s_controls);
+  redraw();
 }
 static void footer(const char *text) {
   text_layer_set_text(s_footer, text);
-  layer_mark_dirty(s_controls);
+  redraw();
 }
 static void cancel_timer(void) { if (s_timer) { app_timer_cancel(s_timer); s_timer = NULL; } }
 static void timeout(void *context) {
@@ -181,22 +197,22 @@ static void init(void) {
   status_bar_layer_set_colors(s_status, GColorLightGray, GColorBlack);
   status_bar_layer_set_separator_mode(s_status, StatusBarLayerSeparatorModeNone);
   layer_add_child(root, status_bar_layer_get_layer(s_status));
-  s_title = text_layer_create(GRect(10, 24, TEXT_WIDTH, 24));
+  s_title = text_layer_create(GRect(60, 179, 124, 24));
   text_layer_set_background_color(s_title, GColorClear); text_layer_set_text_color(s_title, GColorBlack);
   text_layer_set_overflow_mode(s_title, GTextOverflowModeTrailingEllipsis);
   text_layer_set_font(s_title, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD)); text_layer_set_text(s_title, s_assistant);
   layer_add_child(root, text_layer_get_layer(s_title));
-  s_scroll = scroll_layer_create(GRect(0, 54, CONTENT_WIDTH, VIEW_HEIGHT));
+  s_scroll = scroll_layer_create(GRect(0, VIEW_TOP, SCREEN_WIDTH, VIEW_HEIGHT));
   scroll_layer_set_shadow_hidden(s_scroll, true);
-  s_text = text_layer_create(GRect(10, 0, TEXT_WIDTH, VIEW_HEIGHT));
+  s_text = text_layer_create(GRect(TEXT_INSET, 0, TEXT_WIDTH, VIEW_HEIGHT));
   text_layer_set_background_color(s_text, GColorClear); text_layer_set_text_color(s_text, GColorBlack);
   text_layer_set_font(s_text, fonts_get_system_font(FONT_KEY_GOTHIC_24));
   scroll_layer_add_child(s_scroll, text_layer_get_layer(s_text)); layer_add_child(root, scroll_layer_get_layer(s_scroll));
-  s_footer = text_layer_create(GRect(10, 205, TEXT_WIDTH, 20));
+  s_footer = text_layer_create(GRect(60, 202, 124, 20));
   text_layer_set_background_color(s_footer, GColorClear); text_layer_set_text_color(s_footer, GColorBlack);
   text_layer_set_font(s_footer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
   layer_add_child(root, text_layer_get_layer(s_footer));
-  s_controls = layer_create(GRect(CONTENT_WIDTH, STATUS_BAR_LAYER_HEIGHT, 24, 210));
+  s_controls = layer_create(GRect(0, VIEW_TOP, SCREEN_WIDTH, 228 - VIEW_TOP));
   layer_set_update_proc(s_controls, draw_controls);
   layer_add_child(root, s_controls);
   scroll_layer_set_click_config_onto_window(s_scroll, s_window);

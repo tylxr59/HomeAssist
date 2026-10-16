@@ -29,7 +29,7 @@ Pebble's speech service performs transcription. The app sends the resulting text
 ![HomeAssist reply layout on the Time 2 emulator](docs/reply.png)
 ![HomeAssist setup screen on the Time 2 emulator](docs/setup.png)
 
-The reply screenshot uses sample text to preview the layout. The watch UI uses the system dictation palette, clock bar, Gothic fonts, and microphone/scroll cues. See [UI references](docs/ui-design.md).
+The reply screenshot uses sample text to preview the layout. Replies take the main reading area, with a compact assistant and voice indicator below. The watch UI keeps the system dictation palette, clock bar, and Gothic fonts. See [UI references](docs/ui-design.md).
 
 ## Setup
 
