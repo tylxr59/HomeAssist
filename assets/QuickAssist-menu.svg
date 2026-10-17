@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1254" height="1254" viewBox="0 0 1254 1254" role="img" aria-labelledby="title desc">
+  <title id="title">QuickAssist menu icon</title>
+  <desc id="desc">A rounded black house outline and a blue speech bubble containing a white voice waveform, on a transparent background.</desc>
+  <defs>
+    <linearGradient id="voiceGradient" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#08D4EA"/>
+      <stop offset="0.5" stop-color="#02B9F5"/>
+      <stop offset="1" stop-color="#008AFF"/>
+    </linearGradient>
+  </defs>
+  <!-- Chimney behind the roof -->
+  <path d="M 875 229 H 914 Q 957 229 957 272 V 456 H 832 V 272 Q 832 229 875 229 Z" fill="#000000"/>
+  <!-- Roof, intentionally constructed from a thick round-capped stroke -->
+  <path d="M 157 541 L 574 211 Q 588 199 605 212 L 992 536" fill="none" stroke="#000000" stroke-width="100" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Home walls, with gently curved bottom corners -->
+  <path d="M 234 539 V 899 Q 234 970 304 970 H 530" fill="none" stroke="#000000" stroke-width="101" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Voice bubble silhouette: smooth connected cubic curves -->
+  <path d="M 821 632
+    H 979
+    C 1091 632 1172 714 1172 822
+    V 896
+    C 1172 1006 1091 1084 980 1084
+    H 803
+    C 789 1084 779 1087 767 1094
+    L 659 1156
+    C 636 1170 612 1157 620 1128
+    L 648 1048
+    C 651 1035 646 1023 636 1017
+    C 594 990 571 945 571 895
+    V 818
+    C 571 766 597 724 644 703
+    C 677 688 689 684 709 661
+    C 733 639 764 632 821 632 Z" fill="url(#voiceGradient)"/>
+  <!-- Five round-ended voice levels -->
+  <g fill="none" stroke="#FFFFFF" stroke-width="49" stroke-linecap="round">
+    <path d="M 722 839 V 897"/>
+    <path d="M 804 790 V 938"/>
+    <path d="M 886 723 V 999"/>
+    <path d="M 968 790 V 938"/>
+    <path d="M 1050 839 V 897"/>
+  </g>
+</svg>
