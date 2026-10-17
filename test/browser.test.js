@@ -105,7 +105,7 @@ test('real Clay onboarding connects, populates and validates without closing the
 });
 
 function runRenderedPage(page, mock, scenario) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'homeassist-clay-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'quickassist-clay-'));
   try {
     const filename = path.join(dir, 'settings.html');
     fs.writeFileSync(filename, page.replace('<head>', '<head>' + mock).replace('</body>', scenario + '</body>'));

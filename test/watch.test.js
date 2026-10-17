@@ -11,7 +11,7 @@ test('watch startup overlaps dictation and handshake without losing or replaying
   const declarations = source.slice(source.indexOf('#define MAX_TRANSCRIPT'), source.indexOf('static void draw_controls'));
   const handlers = source.slice(source.indexOf('static void cancel_timer'), source.indexOf('static void init'));
   const harness = fs.readFileSync('test/helpers/watch-harness.c', 'utf8');
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'homeassist-watch-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'quickassist-watch-'));
   try {
     const input = path.join(dir, 'watch.c'), binary = path.join(dir, 'watch');
     fs.writeFileSync(input, harness.replace('/* WATCH_CODE */', declarations + handlers));

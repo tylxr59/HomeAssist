@@ -17,7 +17,7 @@ static DictationSession *s_dictation;
 static AppTimer *s_timer, *s_start_timer;
 static char s_pending[MAX_TRANSCRIPT + 1];
 static char s_reply[MAX_REPLY + 1];
-static char s_assistant[96] = "HomeAssist";
+static char s_assistant[96] = "QuickAssist";
 static uint32_t s_request, s_config_revision;
 static uint16_t s_next_chunk;
 static bool s_ready, s_busy, s_listening, s_auto_started, s_received_config, s_complete;
@@ -99,7 +99,7 @@ static void dictation_result(DictationSession *session, DictationSessionStatus s
 static void start_automatic(void *context) { s_start_timer = NULL; dictate(); }
 static void dictate(void) {
   if (s_busy || s_listening || s_pending[0]) return;
-  if (s_received_config && !s_ready) { show("Open HomeAssist settings on your phone to connect your voice assistant."); return; }
+  if (s_received_config && !s_ready) { show("Open QuickAssist settings on your phone to connect your voice assistant."); return; }
   if (!s_dictation) s_dictation = dictation_session_create(0, dictation_result, NULL);
   if (!s_dictation) { show("Dictation unavailable. Check the phone connection and speech service."); return; }
   dictation_session_enable_confirmation(s_dictation, false);
@@ -172,10 +172,10 @@ static void inbox(DictionaryIterator *it, void *context) {
     }
     cancel_timer();
     s_ready = ready && ready->value->uint8;
-    snprintf(s_assistant, sizeof(s_assistant), "%s", name && name->length > 1 ? name->value->cstring : "HomeAssist");
+    snprintf(s_assistant, sizeof(s_assistant), "%s", name && name->length > 1 ? name->value->cstring : "QuickAssist");
     text_layer_set_text(s_title, s_assistant);
     footer("Speak");
-    if (!s_ready) { show(text ? text->value->cstring : "Configure HomeAssist on your phone."); footer("Set up on phone"); }
+    if (!s_ready) { show(text ? text->value->cstring : "Configure QuickAssist on your phone."); footer("Set up on phone"); }
     else if (s_pending[0]) { deadline(15000); send_pending(); }
     else if (s_listening) footer("Listening…");
     else if (!s_auto_started && !s_start_timer) s_start_timer = app_timer_register(100, start_automatic, NULL);

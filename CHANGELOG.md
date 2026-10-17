@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Rebranded the app as QuickAssist and added its house-and-voice logo to the watch launcher.
+
 - Opened dictation alongside the phone handshake, holding recognized speech until the companion is ready and discarding it on timeout or configuration changes.
 
 ## 1.0.0

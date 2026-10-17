@@ -3,7 +3,7 @@ module.exports = function(settings, pipelines) {
   var options = [{label: 'Select an assistant…', value: ''}];
   pipelines.forEach(function(p) { options.push({label: p.name, value: p.id}); });
   return [
-    {type: 'heading', defaultValue: 'HomeAssist'},
+    {type: 'heading', defaultValue: 'QuickAssist'},
     {type: 'text', id: 'connection-status', defaultValue: 'Enter your Home Assistant URL and token, then connect to choose a voice assistant.'},
     {type: 'section', items: [
       {type: 'input', messageKey: 'Url', label: 'Home Assistant URL', defaultValue: settings.url || '', attributes: {type: 'url', placeholder: 'https://home.example.com'}},

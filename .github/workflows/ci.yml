@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: homeassist
+        working-directory: quickassist
     env:
       RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
 
@@ -32,14 +32,14 @@ jobs:
         with:
           ref: ${{ env.RELEASE_TAG }}
           fetch-depth: 0
-          path: homeassist
+          path: quickassist
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
           node-version: "22"
           cache: "npm"
-          cache-dependency-path: homeassist/package-lock.json
+          cache-dependency-path: quickassist/package-lock.json
 
       - name: Install uv
         run: |
@@ -82,8 +82,8 @@ jobs:
       - name: Upload PBW artifact
         uses: actions/upload-artifact@v6
         with:
-          name: homeassist-pbw
-          path: homeassist/build/*.pbw
+          name: quickassist-pbw
+          path: quickassist/build/*.pbw
           if-no-files-found: error
 
       - name: Publish GitHub Release

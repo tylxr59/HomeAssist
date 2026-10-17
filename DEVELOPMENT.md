@@ -59,3 +59,13 @@ These checks require a real compatible phone companion, working dictation servic
 - Verify both HTTP LAN and HTTPS/reverse-proxy URLs as relevant to the user's network.
 
 Do not record tokens in logs, screenshots, fixtures, issue reports, or release notes.
+
+## Branding assets
+
+The source logo is `assets/QuickAssist.svg`. The watch launcher uses `resources/images/menu-icon.png`, generated from that SVG. To regenerate it after editing the logo:
+
+```bash
+uv run --with cairosvg python -c "import cairosvg; cairosvg.svg2png(url='assets/QuickAssist.svg', write_to='resources/images/menu-icon.png', output_width=25, output_height=25)"
+```
+
+The [Pebble launcher](https://developer.rebble.io/guides/app-resources/images/#menu-icon-in-the-launcher) renders the icon in grayscale. The README uses the full-color SVG. The app UUID and original `homeassist-*` phone storage keys are retained so upgrades preserve saved connections.

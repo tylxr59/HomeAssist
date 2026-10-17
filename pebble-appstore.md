@@ -4,13 +4,13 @@ Status: Not yet published
 
 ## Name
 
-HomeAssist
+QuickAssist
 
 ## Description
 
 Proposed copy:
 
-Speak to Home Assistant from your Pebble Time 2. Open HomeAssist, speak your request, and read your assistant's reply on your wrist.
+Speak to Home Assistant from your Pebble Time 2. Open QuickAssist, speak your request, and read your assistant's reply on your wrist.
 
 - Starts dictation immediately on launch.
 - Uses your chosen Home Assistant voice assistant.

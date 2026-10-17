@@ -7,6 +7,7 @@ var ha = require('./ha');
 var protocol = require('./protocol');
 var T = protocol.TYPE;
 function read(name, fallback) { try { return JSON.parse(localStorage.getItem(name)) || fallback; } catch (_) { return fallback; } }
+// Keep the original storage keys so upgrades preserve saved connections.
 var settings = read('homeassist-settings', {});
 var pipelines = read('homeassist-pipelines', []);
 var status = read('homeassist-status', 'Open phone settings, connect to Home Assistant, and select an assistant.');
@@ -19,7 +20,7 @@ function selected() { return pipelines.filter(function(p) { return p.id === sett
 function ready() { return !!(validated && settings.url && settings.token && selected()); }
 function notify() {
   var p = selected();
-  send({Type: T.CONFIG, RequestId: configRevision, Ready: ready() ? 1 : 0, Assistant: p ? p.name.slice(0, 30) : '', Text: ready() ? 'Ready' : !settings.url || !settings.token ? 'Open HomeAssist settings on your phone to connect your voice assistant.' : status.slice(0, 350)});
+  send({Type: T.CONFIG, RequestId: configRevision, Ready: ready() ? 1 : 0, Assistant: p ? p.name.slice(0, 30) : '', Text: ready() ? 'Ready' : !settings.url || !settings.token ? 'Open QuickAssist settings on your phone to connect your voice assistant.' : status.slice(0, 350)});
 }
 function persist() {
   localStorage.setItem('homeassist-settings', JSON.stringify(settings));
@@ -54,7 +55,7 @@ function discover() {
     var cancel = client.perform(settings, null, complete);
     if (discovering && gen === generation) cancelOperation = cancel;
   } catch (_) {
-    complete(new Error('Could not start assistant discovery. Reopen HomeAssist and save settings again.'));
+    complete(new Error('Could not start assistant discovery. Reopen QuickAssist and save settings again.'));
   }
 }
 Pebble.addEventListener('ready', function() {
@@ -76,7 +77,7 @@ Pebble.addEventListener('webviewclosed', function(e) {
   reset(); configRevision++;
   if (next.url !== settings.url || next.token !== settings.token) { pipelines = []; }
   settings = next;
-  if (!settings.url || !settings.token) { validated = false; status = 'Open HomeAssist settings on your phone. Enter URL and token, connect, select an assistant, and save.'; persist(); notify(); return; }
+  if (!settings.url || !settings.token) { validated = false; status = 'Open QuickAssist settings on your phone. Enter URL and token, connect, select an assistant, and save.'; persist(); notify(); return; }
   try { ha.endpoint(settings.url); } catch (err) { validated = false; status = err.message; persist(); notify(); return; }
   discover();
 });
