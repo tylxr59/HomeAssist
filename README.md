@@ -99,7 +99,7 @@ To repair an existing release: **Actions → Release PBW → Run workflow**, ent
 - `resources/images/`: Pebble launcher icon.
 - `docs/`: emulator screenshots.
 - `package.json`, `wscript`: Pebble build configuration.
-- `pebble-appstore.md`: proposed listing copy.
+- `pebble-appstore.md`: listing copy and requirements for the first Pebble Appstore submission.
 
 ## License
 

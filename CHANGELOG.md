@@ -1,10 +1,10 @@
 # Changelog
 
-## Unreleased
+## 1.1.0
 
-- Rebranded the app as QuickAssist and added its house-and-voice logo to the watch launcher, using the revised logo geometry, a transparent background, a black house outline, and a solid speech bubble.
-
-- Opened dictation alongside the phone handshake, holding recognized speech until the companion is ready and discarding it on timeout or configuration changes.
+- Rebranded the app as QuickAssist and added a house-and-voice launcher icon with a transparent background and black house outline.
+- Started dictation while connecting to the phone, so you can speak sooner. Recognized speech waits until the companion is ready and is discarded if the connection times out or settings change.
+- Added listing copy and setup requirements for the first Pebble Appstore submission.
 
 ## 1.0.0
 
