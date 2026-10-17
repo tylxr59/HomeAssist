@@ -14,7 +14,8 @@ static StatusBarLayer *s_status;
 static Layer *s_controls;
 static ScrollLayer *s_scroll;
 static DictationSession *s_dictation;
-static AppTimer *s_timer;
+static AppTimer *s_timer, *s_start_timer;
+static char s_pending[MAX_TRANSCRIPT + 1];
 static char s_reply[MAX_REPLY + 1];
 static char s_assistant[96] = "HomeAssist";
 static uint32_t s_request, s_config_revision;
@@ -80,9 +81,12 @@ static void footer(const char *text) {
 static void cancel_timer(void) { if (s_timer) { app_timer_cancel(s_timer); s_timer = NULL; } }
 static void timeout(void *context) {
   s_timer = NULL;
-  s_busy = false;
+  bool was_processing = s_busy;
+  s_pending[0] = '\0';
+  if (s_listening && s_dictation) dictation_session_stop(s_dictation);
+  s_listening = false; s_busy = false;
   s_request++; // Late results must not overwrite this error.
-  show(s_received_config ? "Request timed out. It may have run. Check Home Assistant before trying again." : "Phone companion unavailable. Check Bluetooth and reopen HomeAssist.");
+  show(was_processing ? "Request timed out. It may have run. Check Home Assistant before trying again." : "Phone companion unavailable. Check Bluetooth and press the middle button to retry.");
   footer(s_received_config ? "Speak" : "Reconnect");
 }
 static void deadline(uint32_t ms) { cancel_timer(); s_timer = app_timer_register(ms, timeout, NULL); }
@@ -92,16 +96,31 @@ static void send_hello(void) {
 }
 static void dictate(void);
 static void dictation_result(DictationSession *session, DictationSessionStatus status, char *text, void *context);
-static void start_automatic(void *context) { s_timer = NULL; dictate(); }
+static void start_automatic(void *context) { s_start_timer = NULL; dictate(); }
 static void dictate(void) {
-  if (s_busy || s_listening) return;
-  if (!s_ready) { show("Open HomeAssist settings on your phone to connect your voice assistant."); return; }
+  if (s_busy || s_listening || s_pending[0]) return;
+  if (s_received_config && !s_ready) { show("Open HomeAssist settings on your phone to connect your voice assistant."); return; }
   if (!s_dictation) s_dictation = dictation_session_create(0, dictation_result, NULL);
   if (!s_dictation) { show("Dictation unavailable. Check the phone connection and speech service."); return; }
   dictation_session_enable_confirmation(s_dictation, false);
   dictation_session_enable_error_dialogs(s_dictation, false);
   s_listening = true;
   if (dictation_session_start(s_dictation) != DictationSessionStatusSuccess) { s_listening = false; show("Could not start dictation. Check your phone and try again."); }
+  else s_auto_started = true;
+}
+// Retain recognition until CONFIG arrives and any startup outbox message clears.
+// Once a command is submitted it is never automatically replayed.
+static void send_pending(void) {
+  if (!s_pending[0] || !s_ready || s_busy) return;
+  DictionaryIterator *it;
+  if (app_message_outbox_begin(&it) != APP_MSG_OK) return;
+  s_request++; s_next_chunk = 0; s_complete = false;
+  dict_write_uint8(it, MESSAGE_KEY_Type, COMMAND);
+  dict_write_uint32(it, MESSAGE_KEY_RequestId, s_request);
+  dict_write_cstring(it, MESSAGE_KEY_Text, s_pending);
+  show(s_pending); s_pending[0] = '\0'; s_busy = true; footer("Thinking…");
+  if (app_message_outbox_send() != APP_MSG_OK) { cancel_timer(); s_busy = false; show("Could not send. Check your phone connection."); footer("Speak"); return; }
+  deadline(80000);
 }
 static void dictation_result(DictationSession *session, DictationSessionStatus status, char *text, void *context) {
   s_listening = false;
@@ -111,18 +130,15 @@ static void dictation_result(DictationSession *session, DictationSessionStatus s
   }
   if (!text || !text[0]) { show("No speech detected. Please try again."); return; }
   if (strlen(text) > MAX_TRANSCRIPT) { show("Command too long. Please try a shorter command."); return; }
-  DictionaryIterator *it;
-  if (app_message_outbox_begin(&it) != APP_MSG_OK) { show("Phone connection busy. Try again in a moment."); return; }
-  s_request++; s_next_chunk = 0; s_complete = false;
-  dict_write_uint8(it, MESSAGE_KEY_Type, COMMAND);
-  dict_write_uint32(it, MESSAGE_KEY_RequestId, s_request);
-  dict_write_cstring(it, MESSAGE_KEY_Text, text);
-  show(text); s_busy = true; footer("Thinking…");
-  if (app_message_outbox_send() != APP_MSG_OK) { s_busy = false; show("Could not send. Check your phone connection."); footer("Speak"); return; }
-  deadline(80000);
+  snprintf(s_pending, sizeof(s_pending), "%s", text);
+  show(s_pending); footer(s_ready ? "Sending…" : "Connecting…");
+  // Bound the wait even if the outbox remains unavailable after readiness.
+  deadline(15000);
+  send_pending();
 }
 static void select_click(ClickRecognizerRef recognizer, void *context) {
-  if (!s_received_config) { send_hello(); deadline(15000); return; }
+  if (s_busy || s_listening || s_pending[0]) return;
+  if (!s_received_config) { send_hello(); deadline(15000); }
   dictate();
 }
 static void clicks(void *context) {
@@ -146,9 +162,11 @@ static void inbox(DictionaryIterator *it, void *context) {
     uint32_t rev = revision ? revision->value->uint32 : 0;
     bool now_ready = ready && ready->value->uint8;
     if (s_received_config && now_ready && s_ready && rev == s_config_revision) return;
+    bool first_ready = !s_received_config && now_ready;
     s_config_revision = rev;
     s_received_config = true;
-    if (s_busy || s_listening) {
+    if (!first_ready) {
+      s_pending[0] = '\0';
       if (s_listening && s_dictation) dictation_session_stop(s_dictation);
       s_listening = false; s_busy = false; s_request++;
     }
@@ -158,7 +176,9 @@ static void inbox(DictionaryIterator *it, void *context) {
     text_layer_set_text(s_title, s_assistant);
     footer("Speak");
     if (!s_ready) { show(text ? text->value->cstring : "Configure HomeAssist on your phone."); footer("Set up on phone"); }
-    else if (!s_auto_started) { s_auto_started = true; s_timer = app_timer_register(100, start_automatic, NULL); }
+    else if (s_pending[0]) { deadline(15000); send_pending(); }
+    else if (s_listening) footer("Listening…");
+    else if (!s_auto_started && !s_start_timer) s_start_timer = app_timer_register(100, start_automatic, NULL);
     else show("Press the middle button to speak.");
     return;
   }
@@ -182,12 +202,13 @@ static void inbox(DictionaryIterator *it, void *context) {
     if (last->value->uint8) { s_complete = true; s_busy = false; cancel_timer(); show(s_reply); footer("Ask again"); }
   }
 }
+static void outbox_sent(DictionaryIterator *it, void *context) { send_pending(); }
 static void outbox_failed(DictionaryIterator *it, AppMessageResult reason, void *context) {
   Tuple *type = dict_find(it, MESSAGE_KEY_Type);
   if (type && type->value->uint8 == COMMAND && s_busy) {
     cancel_timer(); s_busy = false; s_request++;
     show("Phone delivery failed. The command may have run; check Home Assistant."); footer("Speak");
-  }
+  } else send_pending();
 }
 static void init(void) {
   // Match the system dictation window's palette and clock bar exactly.
@@ -220,12 +241,15 @@ static void init(void) {
   window_stack_push(s_window, true);
   show("Connecting to phone…"); footer("Connecting…");
   app_message_register_inbox_received(inbox); app_message_register_outbox_failed(outbox_failed);
+  app_message_register_outbox_sent(outbox_sent);
   app_message_open(2048, 2048);
   s_dictation = dictation_session_create(0, dictation_result, NULL);
   send_hello(); deadline(15000);
+  s_start_timer = app_timer_register(100, start_automatic, NULL);
 }
 static void deinit(void) {
-  cancel_timer(); if (s_dictation) dictation_session_destroy(s_dictation);
+  cancel_timer(); if (s_start_timer) app_timer_cancel(s_start_timer);
+  if (s_dictation) dictation_session_destroy(s_dictation);
   text_layer_destroy(s_text); scroll_layer_destroy(s_scroll); text_layer_destroy(s_title); text_layer_destroy(s_footer);
   layer_destroy(s_controls); status_bar_layer_destroy(s_status); window_destroy(s_window);
 }

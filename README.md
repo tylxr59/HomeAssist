@@ -2,7 +2,7 @@
 
 Speak to your Home Assistant voice assistant directly from Pebble Time 2.
 
-Launching the configured app immediately opens Pebble dictation. The recognized text goes to your selected Home Assistant Assist pipeline, and its reply appears on your watch. Press SELECT to continue the conversation.
+Launching the app immediately opens Pebble dictation while HomeAssist checks readiness with the phone companion. If transcription finishes first, the watch holds it until the companion confirms the configured assistant is ready. The recognized text goes to your selected Home Assistant Assist pipeline, and its reply appears on your watch. Press SELECT to continue the conversation.
 
 ## Install
 
@@ -20,7 +20,7 @@ Download the latest PBW from [GitHub Releases](https://github.com/tylxr59/HomeAs
 - Pebble Time 2 (`emery`) and a compatible Pebble phone companion with working dictation.
 - A phone network connection that can reach your Home Assistant instance.
 - Home Assistant with Assist pipelines configured and a long-lived access token permitted to list and run those pipelines.
-- Pebble SDK 4.33.1 or compatible and Node.js 22+ to build and test locally.
+- Pebble SDK 4.33.1 or compatible, Node.js 22+, and a host C compiler (`cc`) to build and test locally.
 
 Pebble's speech service performs transcription. The app sends the resulting text to HA's intent stage; it does not use HA's STT or TTS providers. Replies are text only. Select a pipeline whose language matches your Pebble dictation language.
 
@@ -47,7 +47,7 @@ Credentials and cached assistant metadata are stored in the phone's PebbleKitJS 
 
 ## Controls
 
-- **Launch:** starts dictation once configured and the companion is ready.
+- **Launch:** starts dictation while checking companion readiness.
 - **SELECT:** starts another dictation, preserving the current conversation.
 - **UP/DOWN:** scrolls the reply or setup/error text.
 - **BACK:** closes dictation using the system controls, or exits the app from the result screen.

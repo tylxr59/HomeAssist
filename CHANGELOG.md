@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Opened dictation alongside the phone handshake, holding recognized speech until the companion is ready and discarding it on timeout or configuration changes.
+
 ## 1.0.0
 
 - Added launch-to-dictation access to Home Assistant Assist on Pebble Time 2, with immediate command submission and scrollable text replies.

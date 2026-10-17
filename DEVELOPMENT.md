@@ -15,11 +15,11 @@ AppMessage keys are explicit in `package.json`. Numeric and named keys are accep
 | ERROR | 4 | RequestId, Text |
 | ACK | 5 | RequestId, ChunkIndex |
 
-Command IDs advance on errors and settings changes so late responses cannot replace current UI. Duplicate readiness notifications for the same ready configuration do not restart or cancel dictation. Replies use ordered chunks of up to 400 UTF-8 bytes, without splitting characters. The watch acknowledges each chunk, including duplicates, and assembles at most 8,192 bytes. PKJS retries the same chunk at most three total attempts, waiting 2.5 seconds between attempts. Commands themselves are never replayed.
+Command IDs advance on errors and settings changes so late responses cannot replace current UI. Dictation starts on launch alongside the HELLO/CONFIG handshake. The first ready CONFIG preserves active dictation or submits a held transcript once the outbox is available. Duplicate readiness notifications for the same ready configuration do not restart or cancel dictation. Unready configurations, settings changes, and startup timeouts discard held transcripts. A submitted command is never automatically replayed. Replies use ordered chunks of up to 400 UTF-8 bytes, without splitting characters. The watch acknowledges each chunk, including duplicates, and assembles at most 8,192 bytes. PKJS retries the same chunk at most three total attempts, waiting 2.5 seconds between attempts. Commands themselves are never replayed.
 
 The client authenticates on `/api/websocket`, lists `assist_pipeline/pipeline/list`, and submits `assist_pipeline/run` with intent as both start and end stage. The command's successful `result` message acknowledges subscription only. `intent-end` supplies the response; `run-end` completes it. The returned conversation ID is reused only during the current app session.
 
-Connection/discovery timeouts are 10 seconds; command completion has a 60-second timeout after authentication. The watch waits up to 80 seconds for the command and reply delivery, or 15 seconds for the companion on startup. Failed responses are never retried as commands.
+Connection/discovery timeouts are 10 seconds; command completion has a 60-second timeout after authentication. The watch waits up to 80 seconds for the command and reply delivery, or 15 seconds for the companion on startup. A completed transcript can wait up to 15 seconds for readiness or a free outbox; it is discarded if that wait expires. Failed responses are never retried as commands.
 
 ## Validation
 
@@ -28,6 +28,8 @@ npm test
 npm run build
 npm run --silent release:notes
 ```
+
+The watch startup test requires a host C compiler (`cc`). It compiles the production watch state and event handlers against mocked Pebble APIs to check both handshake/dictation completion orders, cancellation, startup retries, configuration changes, outbox contention, and timeout cleanup. Real phone dictation still requires hardware validation.
 
 The automated suite covers authentication ordering and failures, pipeline discovery and explicit selection, context reset and continuation, stale results, concurrent requests, timeout/disconnection without command replay, Unicode reply chunking, and acknowledgement retries.
 
@@ -47,7 +49,7 @@ Keep VNC enabled in both commands on a headless system.
 These checks require a real compatible phone companion, working dictation service, and HA instance. Mock tests and emulator screenshots do not prove these work on hardware.
 
 - Enter URL/token, tap Connect, select a named pipeline on the same page, and save. Confirm that cancelling discards edits and reopening restores the selected assistant.
-- Launch into dictation automatically, speak a harmless query, and verify HA's reply.
+- Launch into dictation while the companion starts, speak a harmless query, and verify HA's reply. Check that readiness arriving during speech does not close dictation, and a transcript completed before readiness is submitted exactly once.
 - Speak a device command and confirm it reaches the selected pipeline exactly once.
 - Press SELECT for a contextual follow-up; exit/reopen and confirm context resets.
 - Cancel dictation and verify no HA request is submitted.
