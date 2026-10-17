@@ -1,43 +1,122 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1254" height="1254" viewBox="0 0 1254 1254" role="img" aria-labelledby="title desc">
-  <title id="title">QuickAssist</title>
-  <desc id="desc">A rounded white house outline and a blue speech bubble containing a voice waveform.</desc>
-  <defs>
-    <linearGradient id="voiceGradient" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
-      <stop offset="0" stop-color="#08D4EA"/>
-      <stop offset="0.5" stop-color="#02B9F5"/>
-      <stop offset="1" stop-color="#008AFF"/>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="1254"
+   height="1254"
+   viewBox="0 0 1254 1254"
+   role="img"
+   aria-labelledby="title desc"
+   version="1.1"
+   id="svg11"
+   sodipodi:docname="QuickAssist.svg"
+   inkscape:version="1.4.4 (dcaf3e7d9e, 2026-05-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview11"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.94019139"
+     inkscape:cx="627"
+     inkscape:cy="627"
+     inkscape:window-width="2560"
+     inkscape:window-height="1382"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg11" />
+  <title
+     id="title">QuickAssist</title>
+  <desc
+     id="desc">A rounded white house outline and a blue speech bubble containing a voice waveform.</desc>
+  <defs
+     id="defs3">
+    <linearGradient
+       id="voiceGradient"
+       x1="536.03686"
+       y1="673.22236"
+       x2="1100.2368"
+       y2="1237.4223"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(1.0652253,0,0,0.93876858,9.5725191,-22.335878)">
+      <stop
+         offset="0"
+         stop-color="#08D4EA"
+         id="stop1" />
+      <stop
+         offset="0.5"
+         stop-color="#02B9F5"
+         id="stop2" />
+      <stop
+         offset="1"
+         stop-color="#008AFF"
+         id="stop3" />
     </linearGradient>
   </defs>
-  <rect width="1254" height="1254" fill="#0A2042"/>
+  <rect
+     width="1254"
+     height="1254"
+     fill="#0A2042"
+     id="rect3" />
   <!-- Chimney behind the roof -->
-  <path d="M 875 229 H 914 Q 957 229 957 272 V 456 H 832 V 272 Q 832 229 875 229 Z" fill="#FFFFFF"/>
+  <path
+     d="M 875 229 H 914 Q 957 229 957 272 V 456 H 832 V 272 Q 832 229 875 229 Z"
+     fill="#FFFFFF"
+     id="path3" />
   <!-- Roof, intentionally constructed from a thick round-capped stroke -->
-  <path d="M 157 541 L 574 211 Q 588 199 605 212 L 992 536" fill="none" stroke="#FFFFFF" stroke-width="100" stroke-linecap="round" stroke-linejoin="round"/>
+  <path
+     d="M 157,541 574,211 c 9.33333,-8 19.66667,-7.66667 31,1 l 375.30025,328.25445"
+     fill="none"
+     stroke="#ffffff"
+     stroke-width="100"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="path4"
+     sodipodi:nodetypes="cccc" />
   <!-- Home walls, with gently curved bottom corners -->
-  <path d="M 234 539 V 899 Q 234 970 304 970 H 530" fill="none" stroke="#FFFFFF" stroke-width="101" stroke-linecap="round" stroke-linejoin="round"/>
+  <path
+     d="M 234,484.75573 234,899 c 0,47.33333 23.33333,71 70,71 h 226"
+     fill="none"
+     stroke="#ffffff"
+     stroke-width="101"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="path5"
+     sodipodi:nodetypes="cssc" />
   <!-- Voice bubble silhouette: smooth connected cubic curves -->
-  <path d="M 821 632
-    H 979
-    C 1091 632 1172 714 1172 822
-    V 896
-    C 1172 1006 1091 1084 980 1084
-    H 803
-    C 789 1084 779 1087 767 1094
-    L 659 1156
-    C 636 1170 612 1157 620 1128
-    L 648 1048
-    C 651 1035 646 1023 636 1017
-    C 594 990 571 945 571 895
-    V 818
-    C 571 766 597 724 644 703
-    C 677 688 689 684 709 661
-    C 733 639 764 632 821 632 Z" fill="url(#voiceGradient)"/>
+  <path
+     d="m 830.57252,609.66413 h 158 c 111.99998,0 192.99998,82 192.99998,190 v 74 c 0,110 -81,187.99997 -191.99998,187.99997 h -177 c -14,0 -24,3 -36,10 l -108,62 c -23,14 -47,1 -39,-28 l 28,-80 c 3,-13 -2,-25 -12,-30.99997 -42,-27 -65,-72 -65,-122 v -77 c 0,-52 26,-94 73,-115 33,-15 45,-19 65,-42 24,-22 55,-29 112,-29 z"
+     fill="url(#voiceGradient)"
+     id="path6"
+     style="fill:url(#voiceGradient)" />
   <!-- Five round-ended voice levels -->
-  <g fill="none" stroke="#FFFFFF" stroke-width="49" stroke-linecap="round">
-    <path d="M 722 839 V 897"/>
-    <path d="M 804 790 V 938"/>
-    <path d="M 886 723 V 999"/>
-    <path d="M 968 790 V 938"/>
-    <path d="M 1050 839 V 897"/>
+  <g
+     fill="none"
+     stroke="#ffffff"
+     stroke-width="49"
+     stroke-linecap="round"
+     id="g11"
+     transform="translate(5.3180662,-28.717558)">
+    <path
+       d="m 722,839 v 58"
+       id="path7" />
+    <path
+       d="M 804,790 V 938"
+       id="path8" />
+    <path
+       d="M 886,723 V 999"
+       id="path9" />
+    <path
+       d="M 968,790 V 938"
+       id="path10" />
+    <path
+       d="m 1050,839 v 58"
+       id="path11" />
   </g>
 </svg>

@@ -62,10 +62,10 @@ Do not record tokens in logs, screenshots, fixtures, issue reports, or release n
 
 ## Branding assets
 
-The full-color source logo is `assets/QuickAssist.svg`. The watch launcher has a separate source, `assets/QuickAssist-menu.svg`, with a transparent background and black house outline. Its blue speech bubble and white waveform retain the original logo design. The launcher uses `resources/images/menu-icon.png`, generated from the menu SVG. To regenerate it after editing the menu logo:
+The full-color source logo is `assets/QuickAssist.svg`. The watch launcher has a separate source, `assets/QuickAssist-menu.svg`, with a transparent background and black house outline. Its solid blue speech bubble omits the waveform for clarity at menu size. Both menu assets are derived from the full-color source, preserving its edited shape geometry. The launcher uses `resources/images/menu-icon.png`, generated from the menu SVG. To regenerate the menu SVG and PNG after editing the full-color logo:
 
 ```bash
-uv run --with cairosvg python -c "import cairosvg; cairosvg.svg2png(url='assets/QuickAssist-menu.svg', write_to='resources/images/menu-icon.png', output_width=25, output_height=25)"
+uv run --with cairosvg python tools/generate-menu-icon.py
 ```
 
 The [Pebble launcher](https://developer.rebble.io/guides/app-resources/images/#menu-icon-in-the-launcher) renders the icon in grayscale. The README uses the full-color SVG. The app UUID and original `homeassist-*` phone storage keys are retained so upgrades preserve saved connections.
