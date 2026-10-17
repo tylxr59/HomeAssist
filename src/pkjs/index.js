@@ -7,11 +7,11 @@ var ha = require('./ha');
 var protocol = require('./protocol');
 var T = protocol.TYPE;
 function read(name, fallback) { try { return JSON.parse(localStorage.getItem(name)) || fallback; } catch (_) { return fallback; } }
-// Keep the original storage keys so upgrades preserve saved connections.
-var settings = read('homeassist-settings', {});
-var pipelines = read('homeassist-pipelines', []);
-var status = read('homeassist-status', 'Open phone settings, connect to Home Assistant, and select an assistant.');
-var validated = read('homeassist-validated', false);
+// QuickAssist owns its phone settings independently of the former HomeAssist app.
+var settings = read('quickassist-settings', {});
+var pipelines = read('quickassist-pipelines', []);
+var status = read('quickassist-status', 'Open phone settings, connect to Home Assistant, and select an assistant.');
+var validated = read('quickassist-validated', false);
 var client = new ha.Client(WebSocket);
 var conversationId = null, cancelOperation = null, busy = false, discovering = false, generation = 0, configRevision = 1, clay;
 function send(dict) { Pebble.sendAppMessage(dict, function() {}, function() {}); }
@@ -23,10 +23,10 @@ function notify() {
   send({Type: T.CONFIG, RequestId: configRevision, Ready: ready() ? 1 : 0, Assistant: p ? p.name.slice(0, 30) : '', Text: ready() ? 'Ready' : !settings.url || !settings.token ? 'Open QuickAssist settings on your phone to connect your voice assistant.' : status.slice(0, 350)});
 }
 function persist() {
-  localStorage.setItem('homeassist-settings', JSON.stringify(settings));
-  localStorage.setItem('homeassist-pipelines', JSON.stringify(pipelines));
-  localStorage.setItem('homeassist-status', JSON.stringify(status));
-  localStorage.setItem('homeassist-validated', JSON.stringify(validated));
+  localStorage.setItem('quickassist-settings', JSON.stringify(settings));
+  localStorage.setItem('quickassist-pipelines', JSON.stringify(pipelines));
+  localStorage.setItem('quickassist-status', JSON.stringify(status));
+  localStorage.setItem('quickassist-validated', JSON.stringify(validated));
 }
 function reset() {
   generation++; conversationId = null; busy = false; discovering = false; transfer.cancel();

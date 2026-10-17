@@ -35,6 +35,8 @@ The reply screenshot uses sample text to preview the layout. Replies take the ma
 
 ## Setup
 
+Version 1.2.0 introduces a new QuickAssist app identity and phone storage keys. When upgrading from HomeAssist or QuickAssist 1.0/1.1, enter your HA connection again. The new app can appear alongside the old one; remove the older watch app if needed. Old companion settings are not migrated or erased.
+
 1. In your Home Assistant profile, create a **Long-Lived Access Token**. Treat it like a password.
 2. Open QuickAssist's settings in the Pebble phone companion.
 3. Enter your HA base URL (for example `https://home.example.com` or `http://192.168.1.20:8123`) and token, then tap **Connect**.

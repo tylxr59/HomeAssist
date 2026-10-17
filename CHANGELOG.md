@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.0
+
+- Gave QuickAssist its own app identity and phone settings storage, separate from HomeAssist and QuickAssist 1.0/1.1. Enter your Home Assistant connection again after installing; the new app may appear alongside the old one. Previous companion settings are not migrated or erased.
+
 ## 1.1.0
 
 - Rebranded the app as QuickAssist and added a house-and-voice launcher icon with a transparent background and black house outline.

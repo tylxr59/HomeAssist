@@ -1,6 +1,6 @@
 {
   "name": "quickassist",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "author": "tylxr59",
   "license": "MIT",
@@ -16,7 +16,7 @@
   },
   "pebble": {
     "displayName": "QuickAssist",
-    "uuid": "5a93cd2a-7694-4514-95d0-54c75801ae6d",
+    "uuid": "1dd94591-1fca-4521-8422-bc83719dab4a",
     "sdkVersion": "3",
     "enableMultiJS": true,
     "capabilities": [

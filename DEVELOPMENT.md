@@ -68,4 +68,4 @@ The full-color source logo is `assets/QuickAssist.svg`. The watch launcher has a
 uv run --with cairosvg python tools/generate-menu-icon.py
 ```
 
-The [Pebble launcher](https://developer.rebble.io/guides/app-resources/images/#menu-icon-in-the-launcher) renders the icon in grayscale. The README uses the full-color SVG. The app UUID and original `homeassist-*` phone storage keys are retained so upgrades preserve saved connections.
+The [Pebble launcher](https://developer.rebble.io/guides/app-resources/images/#menu-icon-in-the-launcher) renders the icon in grayscale. The README uses the full-color SVG. Starting with v1.2.0, QuickAssist uses its own app UUID and `quickassist-*` phone storage keys. HomeAssist and earlier QuickAssist versions used a different identity and `homeassist-*` keys. Their saved connections are not migrated; users must configure the new app once. Later QuickAssist upgrades retain this new identity and storage namespace.

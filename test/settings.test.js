@@ -6,7 +6,7 @@ const vm = require('node:vm');
 const path = require('node:path');
 const protocol = require('../src/pkjs/protocol');
 function harness(options = {}) {
-  const handlers = {}, sent = [], ops = [], store = {}, pages = [];
+  const handlers = {}, sent = [], ops = [], store = {...options.store}, pages = [];
   const keys = {Type: 0, RequestId: 1, Text: 2, Ready: 3, Assistant: 4, ChunkIndex: 5, ChunkLast: 6, Url: 7, Token: 8, Pipeline: 9};
   class Clay { constructor(config) {this.meta = {}; pages.push(config);} setSettings() {} generateUrl() {return 'data:local';} getSettings(s) {return JSON.parse(s);} }
   class Client {perform(settings, command, cb) {if (options.discoveryThrows && !command) throw new TypeError('Illegal invocation'); const op = {settings: {...settings}, command, cb}; ops.push(op); return () => cb(new Error('Cancelled'));}}
@@ -45,7 +45,7 @@ test('opening watch during discovery preserves the pending setup operation', () 
   const h = harness(); h.save(); const op = h.ops[0];
   h.handlers.appmessage({payload: {Type: 0}});
   op.cb(null, [{id: 'p1', name: 'Local'}]);
-  assert.equal(JSON.parse(h.store['homeassist-pipelines'])[0].id, 'p1');
+  assert.equal(JSON.parse(h.store['quickassist-pipelines'])[0].id, 'p1');
   h.handlers.showConfiguration(); assert.match(JSON.stringify(h.pages.at(-1)), /Local/);
 });
 
@@ -54,7 +54,7 @@ test('synchronous discovery failure persists an error and can be retried', () =>
   assert.doesNotThrow(() => h.save());
   assert.match(h.sent.at(-1).Text, /Could not start assistant discovery/);
   assert.equal(h.sent.at(-1).Ready, 0);
-  assert.match(JSON.parse(h.store['homeassist-status']), /Could not start/);
+  assert.match(JSON.parse(h.store['quickassist-status']), /Could not start/);
   h.handlers.showConfiguration();
   assert.match(JSON.stringify(h.pages.at(-1)), /Connect/);
   options.discoveryThrows = false;
@@ -65,4 +65,29 @@ test('synchronous discovery failure persists an error and can be retried', () =>
   h.handlers.showConfiguration();
   const select = h.pages.at(-1)[2].items.find(item => item.messageKey === 'Pipeline');
   assert.equal(select.defaultValue, 'p1');
+});
+
+test('QuickAssist starts unconfigured with legacy storage and restores its own saved connection', () => {
+  const legacy = {
+    'homeassist-settings': JSON.stringify({url: 'https://legacy.test', token: 'legacy-fixture', pipeline: 'old'}),
+    'homeassist-pipelines': JSON.stringify([{id: 'old', name: 'Old assistant'}]),
+    'homeassist-status': JSON.stringify('Connected'),
+    'homeassist-validated': JSON.stringify(true)
+  };
+  const h = harness({store: legacy});
+  h.handlers.ready();
+  assert.equal(h.sent.at(-1).Ready, 0);
+  assert.equal(h.ops.length, 0);
+  h.handlers.showConfiguration();
+  assert.ok(!JSON.stringify(h.pages).includes('legacy-fixture'));
+  h.save('p1'); h.ops.at(-1).cb(null, [{id: 'p1', name: 'Quick assistant'}]);
+  assert.deepEqual(JSON.parse(h.store['quickassist-settings']), {url: 'http://ha.test', token: 'secret', pipeline: 'p1'});
+  for (const key of Object.keys(legacy)) assert.equal(h.store[key], legacy[key]);
+  const restarted = harness({store: h.store});
+  restarted.handlers.ready();
+  assert.equal(restarted.sent.at(-1).Ready, 1);
+  assert.equal(restarted.sent.at(-1).Assistant, 'Quick assistant');
+  restarted.command(1);
+  assert.equal(restarted.ops[0].settings.token, 'secret');
+  restarted.ops[0].cb(new Error('Test finished'));
 });
