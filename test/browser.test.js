@@ -76,6 +76,10 @@ test('real Clay onboarding connects, populates and validates without closing the
       try {
         var url=document.querySelector('input[type=url]'), token=document.querySelector('input[type=password]'), select=document.querySelector('select');
         var save=document.querySelector('button[type=submit]'), connect=document.querySelector('button[type=button]');
+        var idle=document.querySelector('input[type=range]');
+        check(idle && idle.value==='30' && idle.min==='5' && idle.max==='300' && idle.step==='5','Inactivity setting defaults and bounds');
+        idle.value='60';idle.dispatchEvent(new Event('change',{bubbles:true}));
+        check(idle.value==='60','Custom inactivity setting');
         function edit(node,value){node.value=value;node.dispatchEvent(new Event('input',{bubbles:true}));}
         check(save.disabled,'Initial save disabled');
         edit(url,'https://ha.test');edit(token,'fixture'); connect.click();

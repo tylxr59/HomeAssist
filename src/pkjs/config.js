@@ -11,6 +11,8 @@ module.exports = function(settings, pipelines) {
       {type: 'button', id: 'connect', defaultValue: 'Connect', primary: true},
       {type: 'select', messageKey: 'Pipeline', label: 'Voice assistant', defaultValue: settings.pipeline || '', options: options}
     ]},
+    {type: 'slider', messageKey: 'IdleTimeout', label: 'Close after inactivity (seconds)', defaultValue: settings.idleTimeout || 30, min: 5, max: 300, step: 5},
+    {type: 'text', defaultValue: 'After a successful reply, QuickAssist closes when this time passes without a button press. Scrolling restarts the timer.'},
     {type: 'text', defaultValue: 'Your phone must be able to reach Home Assistant. Settings are applied only when you save.'},
     {type: 'submit', id: 'save', defaultValue: 'Save', attributes: {disabled: 'disabled'}}
   ];

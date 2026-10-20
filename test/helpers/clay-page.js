@@ -19,7 +19,7 @@ module.exports = function(settings = {}, pipelines = []) {
   const Clay = module.exports;
   const clay = new Clay(require('../../src/pkjs/config')(settings, pipelines), require('../../src/pkjs/custom-config'), {autoHandleEvents: false});
   clay.meta.userData = {createApi: require('../../src/pkjs/ha').createApi};
-  clay.setSettings({Url: settings.url || '', Token: settings.token || '', Pipeline: settings.pipeline || ''});
+  clay.setSettings({Url: settings.url || '', Token: settings.token || '', Pipeline: settings.pipeline || '', IdleTimeout: settings.idleTimeout || 30});
   const url = clay.generateUrl();
   const encoded = url.slice(url.indexOf(',') + 1);
   return /;base64,/.test(url) ? Buffer.from(encoded, 'base64').toString('utf8') : decodeURIComponent(encoded);

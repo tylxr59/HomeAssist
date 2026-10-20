@@ -16,11 +16,15 @@ var client = new ha.Client(WebSocket);
 var conversationId = null, cancelOperation = null, busy = false, discovering = false, generation = 0, configRevision = 1, clay;
 function send(dict) { Pebble.sendAppMessage(dict, function() {}, function() {}); }
 var transfer = new protocol.Transfer(send, null, function(id) { send({Type: T.ERROR, RequestId: id, Text: 'Reply transfer failed. The command may have run; check Home Assistant.'}); });
+function idleTimeout(value) {
+  var seconds = Number(value);
+  return isFinite(seconds) && seconds >= 5 && seconds <= 300 && seconds % 5 === 0 ? seconds : 30;
+}
 function selected() { return pipelines.filter(function(p) { return p.id === settings.pipeline; })[0]; }
 function ready() { return !!(validated && settings.url && settings.token && selected()); }
 function notify() {
   var p = selected();
-  send({Type: T.CONFIG, RequestId: configRevision, Ready: ready() ? 1 : 0, Assistant: p ? p.name.slice(0, 30) : '', Text: ready() ? 'Ready' : !settings.url || !settings.token ? 'Open QuickAssist settings on your phone to connect your voice assistant.' : status.slice(0, 350)});
+  send({Type: T.CONFIG, RequestId: configRevision, Ready: ready() ? 1 : 0, IdleTimeout: idleTimeout(settings.idleTimeout), Assistant: p ? p.name.slice(0, 30) : '', Text: ready() ? 'Ready' : !settings.url || !settings.token ? 'Open QuickAssist settings on your phone to connect your voice assistant.' : status.slice(0, 350)});
 }
 function persist() {
   localStorage.setItem('quickassist-settings', JSON.stringify(settings));
@@ -65,7 +69,7 @@ Pebble.addEventListener('ready', function() {
 Pebble.addEventListener('showConfiguration', function() {
   clay = new Clay(config(settings, pipelines), customConfig, {autoHandleEvents: false});
   clay.meta.userData = {createApi: ha.createApi};
-  clay.setSettings({Url: settings.url || '', Token: settings.token || '', Pipeline: settings.pipeline || ''});
+  clay.setSettings({Url: settings.url || '', Token: settings.token || '', Pipeline: settings.pipeline || '', IdleTimeout: idleTimeout(settings.idleTimeout)});
   Pebble.openURL(clay.generateUrl());
 });
 Pebble.addEventListener('webviewclosed', function(e) {
@@ -73,7 +77,7 @@ Pebble.addEventListener('webviewclosed', function(e) {
   var dict;
   try { dict = clay.getSettings(e.response, false); } catch (_) { status = 'Could not read settings. Open settings and try again.'; persist(); notify(); return; }
   function field(name) { var v = protocol.value(dict, keys, name); return String(v && typeof v === 'object' ? v.value || '' : v || '').trim(); }
-  var next = {url: field('Url'), token: field('Token'), pipeline: field('Pipeline')};
+  var next = {url: field('Url'), token: field('Token'), pipeline: field('Pipeline'), idleTimeout: idleTimeout(field('IdleTimeout'))};
   reset(); configRevision++;
   if (next.url !== settings.url || next.token !== settings.token) { pipelines = []; }
   settings = next;

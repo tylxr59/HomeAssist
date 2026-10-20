@@ -5,11 +5,11 @@ const os = require('node:os');
 const path = require('node:path');
 const {execFileSync} = require('node:child_process');
 
-test('watch startup overlaps dictation and handshake without losing or replaying speech', () => {
+test('watch handles startup, reply inactivity, user activity, and follow-up cancellation', () => {
   const source = fs.readFileSync('src/c/main.c', 'utf8');
   // Compile the production state and event handlers; replace only Pebble platform/UI APIs.
   const declarations = source.slice(source.indexOf('#define MAX_TRANSCRIPT'), source.indexOf('static void draw_controls'));
-  const handlers = source.slice(source.indexOf('static void cancel_timer'), source.indexOf('static void init'));
+  const handlers = source.slice(source.indexOf('static void cancel_idle_timer'), source.indexOf('static void init'));
   const harness = fs.readFileSync('test/helpers/watch-harness.c', 'utf8');
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'quickassist-watch-'));
   try {

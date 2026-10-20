@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0
+
+- Added automatic closing after a successful Home Assistant reply, with a default inactivity timeout of 30 seconds.
+- Added a phone setting to customize the timeout from 5 to 300 seconds in 5-second increments.
+- Kept replies open while you interact: button presses and scrolling restart the timer, and follow-up dictation cancels it until the next successful reply.
+
 ## 1.2.0
 
 - Gave QuickAssist its own app identity and phone settings storage, separate from HomeAssist and QuickAssist 1.0/1.1. Enter your Home Assistant connection again after installing; the new app may appear alongside the old one. Previous companion settings are not migrated or erased.

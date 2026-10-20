@@ -14,13 +14,16 @@ static StatusBarLayer *s_status;
 static Layer *s_controls;
 static ScrollLayer *s_scroll;
 static DictationSession *s_dictation;
-static AppTimer *s_timer, *s_start_timer;
+static AppTimer *s_timer, *s_start_timer, *s_idle_timer;
+static uint32_t s_idle_seconds = 30;
 static char s_pending[MAX_TRANSCRIPT + 1];
 static char s_reply[MAX_REPLY + 1];
 static char s_assistant[96] = "QuickAssist";
 static uint32_t s_request, s_config_revision;
 static uint16_t s_next_chunk;
 static bool s_ready, s_busy, s_listening, s_auto_started, s_received_config, s_complete;
+
+static void user_activity(ClickRecognizerRef recognizer, void *context);
 
 static void draw_controls(Layer *layer, GContext *ctx) {
   const int voice_y = 201 - VIEW_TOP;
@@ -59,7 +62,7 @@ static void redraw(void) {
   layer_mark_dirty(s_controls);
   layer_mark_dirty(status_bar_layer_get_layer(s_status));
 }
-static void scrolled(ScrollLayer *scroll, void *context) { redraw(); }
+static void scrolled(ScrollLayer *scroll, void *context) { user_activity(NULL, NULL); redraw(); }
 static void show(const char *text) {
   if (text != s_reply) snprintf(s_reply, sizeof(s_reply), "%s", text);
   text_layer_set_text(s_text, s_reply);
@@ -77,6 +80,20 @@ static void show(const char *text) {
 static void footer(const char *text) {
   text_layer_set_text(s_footer, text);
   redraw();
+}
+static void cancel_idle_timer(void) {
+  if (s_idle_timer) { app_timer_cancel(s_idle_timer); s_idle_timer = NULL; }
+}
+static void idle_timeout(void *context) {
+  s_idle_timer = NULL;
+  window_stack_pop_all(true);
+}
+static void restart_idle_timer(void) {
+  cancel_idle_timer();
+  s_idle_timer = app_timer_register(s_idle_seconds * 1000, idle_timeout, NULL);
+}
+static void user_activity(ClickRecognizerRef recognizer, void *context) {
+  if (s_idle_timer) restart_idle_timer();
 }
 static void cancel_timer(void) { if (s_timer) { app_timer_cancel(s_timer); s_timer = NULL; } }
 static void timeout(void *context) {
@@ -99,6 +116,7 @@ static void dictation_result(DictationSession *session, DictationSessionStatus s
 static void start_automatic(void *context) { s_start_timer = NULL; dictate(); }
 static void dictate(void) {
   if (s_busy || s_listening || s_pending[0]) return;
+  cancel_idle_timer();
   if (s_received_config && !s_ready) { show("Open QuickAssist settings on your phone to connect your voice assistant."); return; }
   if (!s_dictation) s_dictation = dictation_session_create(0, dictation_result, NULL);
   if (!s_dictation) { show("Dictation unavailable. Check the phone connection and speech service."); return; }
@@ -143,6 +161,9 @@ static void select_click(ClickRecognizerRef recognizer, void *context) {
 }
 static void clicks(void *context) {
   window_single_click_subscribe(BUTTON_ID_SELECT, select_click);
+  window_raw_click_subscribe(BUTTON_ID_UP, user_activity, user_activity, NULL);
+  window_raw_click_subscribe(BUTTON_ID_DOWN, user_activity, user_activity, NULL);
+  window_raw_click_subscribe(BUTTON_ID_SELECT, user_activity, user_activity, NULL);
 }
 static void acknowledge(uint32_t id, uint16_t index) {
   DictionaryIterator *it;
@@ -162,6 +183,10 @@ static void inbox(DictionaryIterator *it, void *context) {
     uint32_t rev = revision ? revision->value->uint32 : 0;
     bool now_ready = ready && ready->value->uint8;
     if (s_received_config && now_ready && s_ready && rev == s_config_revision) return;
+    cancel_idle_timer();
+    Tuple *idle = dict_find(it, MESSAGE_KEY_IdleTimeout);
+    uint32_t seconds = idle ? idle->value->uint32 : 30;
+    s_idle_seconds = seconds >= 5 && seconds <= 300 && seconds % 5 == 0 ? seconds : 30;
     bool first_ready = !s_received_config && now_ready;
     s_config_revision = rev;
     s_received_config = true;
@@ -199,7 +224,7 @@ static void inbox(DictionaryIterator *it, void *context) {
     memcpy(s_reply + used, text->value->cstring, added + 1);
     s_next_chunk++;
     acknowledge(s_request, n);
-    if (last->value->uint8) { s_complete = true; s_busy = false; cancel_timer(); show(s_reply); footer("Ask again"); }
+    if (last->value->uint8) { s_complete = true; s_busy = false; cancel_timer(); show(s_reply); footer("Ask again"); restart_idle_timer(); }
   }
 }
 static void outbox_sent(DictionaryIterator *it, void *context) { send_pending(); }
@@ -248,7 +273,7 @@ static void init(void) {
   s_start_timer = app_timer_register(100, start_automatic, NULL);
 }
 static void deinit(void) {
-  cancel_timer(); if (s_start_timer) app_timer_cancel(s_start_timer);
+  cancel_idle_timer(); cancel_timer(); if (s_start_timer) app_timer_cancel(s_start_timer);
   if (s_dictation) dictation_session_destroy(s_dictation);
   text_layer_destroy(s_text); scroll_layer_destroy(s_scroll); text_layer_destroy(s_title); text_layer_destroy(s_footer);
   layer_destroy(s_controls); status_bar_layer_destroy(s_status); window_destroy(s_window);

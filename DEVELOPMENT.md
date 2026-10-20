@@ -9,7 +9,7 @@ AppMessage keys are explicit in `package.json`. Numeric and named keys are accep
 | Type | Value | Fields |
 | --- | --- | --- |
 | HELLO | 0 | Resets phone conversation state on watch launch |
-| CONFIG | 1 | RequestId (configuration revision), Ready, Assistant, Text |
+| CONFIG | 1 | RequestId (configuration revision), Ready, Assistant, Text, IdleTimeout (seconds) |
 | COMMAND | 2 | RequestId, Text |
 | CHUNK | 3 | RequestId, ChunkIndex, ChunkLast, Text |
 | ERROR | 4 | RequestId, Text |
@@ -20,6 +20,8 @@ Command IDs advance on errors and settings changes so late responses cannot repl
 The client authenticates on `/api/websocket`, lists `assist_pipeline/pipeline/list`, and submits `assist_pipeline/run` with intent as both start and end stage. The command's successful `result` message acknowledges subscription only. `intent-end` supplies the response; `run-end` completes it. The returned conversation ID is reused only during the current app session.
 
 Connection/discovery timeouts are 10 seconds; command completion has a 60-second timeout after authentication. The watch waits up to 80 seconds for the command and reply delivery, or 15 seconds for the companion on startup. A completed transcript can wait up to 15 seconds for readiness or a free outbox; it is discarded if that wait expires. Failed responses are never retried as commands.
+
+The watch starts a separate inactivity timer only after assembling a complete successful reply. `IdleTimeout` defaults to 30 seconds for existing settings and missing or invalid values; phone settings support 5–300 seconds in 5-second increments. Raw UP/DOWN/SELECT press and release events and scroll changes restart the timer. Dictation, configuration changes, and teardown cancel it. Duplicate reply chunks do not extend it. Expiry pops the app windows to exit.
 
 ## Validation
 
@@ -54,6 +56,7 @@ These checks require a real compatible phone companion, working dictation servic
 - Press SELECT for a contextual follow-up; exit/reopen and confirm context resets.
 - Cancel dictation and verify no HA request is submitted.
 - Scroll a long reply to the bottom; verify text stays above the footer.
+- Let a successful reply sit idle and confirm the app exits after 30 seconds. Change the timeout, reopen, and check the saved duration. Verify scrolling (including at either end) extends the deadline and SELECT prevents closing during dictation or processing.
 - Revoke a token, remove the selected pipeline, disconnect Bluetooth, and interrupt network access; verify visible recovery instructions and no automatic command replay.
 - Save settings while processing and verify stale replies do not appear.
 - Verify both HTTP LAN and HTTPS/reverse-proxy URLs as relevant to the user's network.

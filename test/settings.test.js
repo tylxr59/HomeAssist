@@ -7,7 +7,7 @@ const path = require('node:path');
 const protocol = require('../src/pkjs/protocol');
 function harness(options = {}) {
   const handlers = {}, sent = [], ops = [], store = {...options.store}, pages = [];
-  const keys = {Type: 0, RequestId: 1, Text: 2, Ready: 3, Assistant: 4, ChunkIndex: 5, ChunkLast: 6, Url: 7, Token: 8, Pipeline: 9};
+  const keys = {Type: 0, RequestId: 1, Text: 2, Ready: 3, Assistant: 4, ChunkIndex: 5, ChunkLast: 6, Url: 7, Token: 8, Pipeline: 9, IdleTimeout: 10};
   class Clay { constructor(config) {this.meta = {}; pages.push(config);} setSettings() {} generateUrl() {return 'data:local';} getSettings(s) {return JSON.parse(s);} }
   class Client {perform(settings, command, cb) {if (options.discoveryThrows && !command) throw new TypeError('Illegal invocation'); const op = {settings: {...settings}, command, cb}; ops.push(op); return () => cb(new Error('Cancelled'));}}
   const context = {require(name) {
@@ -17,7 +17,7 @@ function harness(options = {}) {
     return require(path.resolve('src/pkjs', name));
   }, Pebble: {addEventListener(name, fn) {handlers[name] = fn;}, sendAppMessage(m) {sent.push(m);}, openURL() {}}, WebSocket: function() {}, localStorage: {getItem(k) {return store[k];}, setItem(k,v) {store[k] = v;}}, setTimeout, clearTimeout};
   vm.runInNewContext(fs.readFileSync('src/pkjs/index.js', 'utf8'), context);
-  return {handlers, sent, ops, store, pages, save(pipeline = '', url = 'http://ha.test') {handlers.showConfiguration(); handlers.webviewclosed({response: JSON.stringify({Url: {value: url}, Token: {value: 'secret'}, Pipeline: {value: pipeline}})});}, command(id, text = 'hello') {handlers.appmessage({payload: {Type: 2, RequestId: id, Text: text}});}, ack(id) {handlers.appmessage({payload: {Type: 5, RequestId: id, ChunkIndex: 0}});}};
+  return {handlers, sent, ops, store, pages, save(pipeline = '', url = 'http://ha.test', idleTimeout) {handlers.showConfiguration(); handlers.webviewclosed({response: JSON.stringify({Url: {value: url}, Token: {value: 'secret'}, Pipeline: {value: pipeline}, IdleTimeout: {value: idleTimeout}})});}, command(id, text = 'hello') {handlers.appmessage({payload: {Type: 2, RequestId: id, Text: text}});}, ack(id) {handlers.appmessage({payload: {Type: 5, RequestId: id, ChunkIndex: 0}});}};
 }
 test('saved configuration requires an explicit valid assistant and sends no credentials to watch', () => {
   const h = harness(); h.handlers.ready(); assert.equal(h.sent.at(-1).Ready, 0);
@@ -81,7 +81,7 @@ test('QuickAssist starts unconfigured with legacy storage and restores its own s
   h.handlers.showConfiguration();
   assert.ok(!JSON.stringify(h.pages).includes('legacy-fixture'));
   h.save('p1'); h.ops.at(-1).cb(null, [{id: 'p1', name: 'Quick assistant'}]);
-  assert.deepEqual(JSON.parse(h.store['quickassist-settings']), {url: 'http://ha.test', token: 'secret', pipeline: 'p1'});
+  assert.deepEqual(JSON.parse(h.store['quickassist-settings']), {url: 'http://ha.test', token: 'secret', pipeline: 'p1', idleTimeout: 30});
   for (const key of Object.keys(legacy)) assert.equal(h.store[key], legacy[key]);
   const restarted = harness({store: h.store});
   restarted.handlers.ready();
@@ -90,4 +90,33 @@ test('QuickAssist starts unconfigured with legacy storage and restores its own s
   restarted.command(1);
   assert.equal(restarted.ops[0].settings.token, 'secret');
   restarted.ops[0].cb(new Error('Test finished'));
+});
+
+test('inactivity timeout defaults to 30 seconds and persists custom settings across restarts', () => {
+  const h = harness(); h.handlers.ready(); assert.equal(h.sent.at(-1).IdleTimeout, 30);
+  h.handlers.showConfiguration();
+  const slider = h.pages.at(-1).find(item => item.messageKey === 'IdleTimeout');
+  assert.equal(slider.defaultValue, 30);
+  assert.equal(slider.min, 5); assert.equal(slider.max, 300); assert.equal(slider.step, 5);
+  h.save('p1', 'http://ha.test', 60);
+  h.ops.at(-1).cb(null, [{id: 'p1', name: 'Local'}]);
+  assert.equal(h.sent.at(-1).IdleTimeout, 60);
+  assert.equal(JSON.parse(h.store['quickassist-settings']).idleTimeout, 60);
+  const restarted = harness({store: h.store}); restarted.handlers.ready();
+  assert.equal(restarted.sent.at(-1).IdleTimeout, 60);
+  restarted.handlers.showConfiguration();
+  assert.equal(restarted.pages.at(-1).find(item => item.messageKey === 'IdleTimeout').defaultValue, 60);
+  restarted.handlers.webviewclosed({response: 'CANCELLED'});
+  assert.equal(JSON.parse(restarted.store['quickassist-settings']).idleTimeout, 60);
+});
+
+test('invalid inactivity settings fall back to 30 seconds for named and numeric message keys', () => {
+  const h = harness();
+  for (const value of [undefined, '', 0, -5, 301, 42, 'bad']) {
+    h.save('p1', 'http://ha.test', value);
+    assert.equal(h.sent.at(-1).IdleTimeout, 30);
+  }
+  h.handlers.showConfiguration();
+  h.handlers.webviewclosed({response: JSON.stringify({7: 'http://ha.test', 8: 'secret', 9: 'p1', 10: 90})});
+  assert.equal(h.sent.at(-1).IdleTimeout, 90);
 });

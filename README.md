@@ -16,6 +16,7 @@ Download the latest PBW from [GitHub Releases](https://github.com/tylxr59/QuickA
 - Selection of a named Home Assistant voice assistant.
 - Scrollable text replies and conversation context until you exit.
 - Visible connection, authentication, and assistant errors.
+- Automatic close after a successful reply: 30 seconds of inactivity by default, customizable in phone settings.
 
 ## Requirements
 
@@ -40,8 +41,9 @@ Version 1.2.0 introduces a new QuickAssist app identity and phone storage keys. 
 1. In your Home Assistant profile, create a **Long-Lived Access Token**. Treat it like a password.
 2. Open QuickAssist's settings in the Pebble phone companion.
 3. Enter your HA base URL (for example `https://home.example.com` or `http://192.168.1.20:8123`) and token, then tap **Connect**.
-4. Wait for the connection result on the same page. Choose your voice assistant from the populated picker, then tap **Save**.
-5. Launch QuickAssist on the watch and speak.
+4. Wait for the connection result on the same page. Choose your voice assistant from the populated picker.
+5. Optionally adjust **Close after inactivity (seconds)** from 5 to 300 seconds in 5-second increments (default: 30), then tap **Save**.
+6. Launch QuickAssist on the watch and speak.
 
 Connect keeps settings open and displays errors inline. Save closes the page and applies the selected assistant; the phone companion then validates the saved connection. Reopening existing settings automatically reconnects and preserves your assistant if it is still available. Changing URL or token requires reconnecting and selecting an assistant before saving. Cancelling the page leaves your saved configuration unchanged.
 
@@ -55,6 +57,8 @@ Credentials and cached assistant metadata are stored in the phone's PebbleKitJS 
 - **SELECT:** starts another dictation, preserving the current conversation.
 - **UP/DOWN:** scrolls the reply or setup/error text.
 - **BACK:** closes dictation using the system controls, or exits the app from the result screen.
+
+After a successful reply, the app closes after the configured period without interaction. Button presses and scrolling restart the timer, including presses at the ends of a reply. Starting another dictation cancels it; the next successful reply starts a new timer. Setup, processing, and errors do not start an inactivity timer.
 
 Exiting and reopening starts a fresh conversation. Saving settings also resets conversation context. Cancelling dictation submits nothing. Commands are sent immediately after recognition and may control devices without further confirmation. While processing, SELECT does not submit another command.
 
