@@ -8,7 +8,7 @@ Launching the app immediately opens Pebble dictation while QuickAssist checks re
 
 ## Install
 
-Download the latest PBW from [GitHub Releases](https://github.com/tylxr59/QuickAssist/releases), or build locally using the instructions below. This app is not yet listed in the Pebble Appstore.
+Install QuickAssist from the [Pebble Appstore](https://apps.repebble.com/9c105d58803741d5b9ec03af), download the latest PBW from [GitHub Releases](https://github.com/tylxr59/QuickAssist/releases), or build locally using the instructions below.
 
 ## Features
 
